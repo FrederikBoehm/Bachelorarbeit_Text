@@ -9,3 +9,5 @@
 *.blg
 *.run.xml
 *.out
+*.gz
+thesis.pdf
