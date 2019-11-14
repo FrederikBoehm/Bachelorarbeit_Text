@@ -47,15 +47,18 @@
 % other packages
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
+\usepackage{fontspec}
 \usepackage{lmodern,relsize,textcomp,csquotes}
 \usepackage{amsmath,amsfonts}
 \usepackage[ngerman,english]{babel}  % flip for German thesis
 \usepackage[final]{graphicx}
+\usepackage{subcaption}
 \usepackage{setspace,geometry,xcolor}
 \usepackage{makeidx}
 \usepackage{paralist,ifthen,todonotes}
 \usepackage{url}
 \usepackage{pdfpages}
+\usepackage{float}
 
 % table setup
 \usepackage{longtable}
@@ -91,14 +94,18 @@
 % configure your listings style
 \usepackage{listings}
 \lstset{
-	tabsize=3,
+  tabsize=4,
+  basicstyle=\footnotesize\ttfamily,
+  captionpos=b,
 	extendedchars=true,
 	frame=single,
 	showstringspaces=true,
 	numbers=left,
-	numberstyle=\small,
+	numberstyle=\scriptsize,
 	breakautoindent=true
 }
+
+\usepackage{acronym}
 
 % page setup
 % \setlength{\topskip}{\ht\strutbox}
@@ -108,6 +115,10 @@
 \clubpenalty = 10000
 \widowpenalty = 10000 
 \displaywidowpenalty = 10000
+
+\setmainfont{Times New Roman}
+\setsansfont{Calibri}
+\setmonofont[Scale=0.9]{Consolas}
 
 % some commands
 \newcommand{\ua}{\mbox{u.\,a.\ }}
