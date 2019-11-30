@@ -1,15 +1,46 @@
 \chapter{Method}\label{ch:method}
 
-In this chapter, we're actually using some code!
+The general approach to this problem is to create text embeddings of the business reports and to train a classification algorithm with these embeddings, labeled with the with the resulting stock price change.
 
-\begin{lstlisting}[language=Python,caption={This is an example of inline listing},captionpos=b]
-x = 1
-if x == 1:
-    # indented four spaces
-    print("x is 1.")
+\section{Creating document embeddings using BERT}
+These text embeddings can be created with the \textit{Paragraph Vector} model \cite{Mikolov2014}, which is better known as the implementation \textit{Doc2Vec}.
+\textit{Paragraph Vector} allows to create fixed length vector representations for variable length input texts, which is necessary to train a classification algorithm.
+This thesis however, will use the language representation model \ac{BERT} to create the document embeddings.
+In comparison to \textit{Paragraph Vector}, \ac{BERT} can be used to create contextualised embeddings, which means that it takes into account the word order of the input text.
+These contextualised embeddings are proven to be more accurate in later tasks. \cite{Joshi2019}
+\ac{BERT} is based on the Transformer architecture which was proposed in \cite{Vaswani2017}.
+These transformer blocks are stacked in multiple layers, with 12 layers in case of BERT\textsubscript{BASE} and 24 layers in case of BERT\textsubscript{LARGE}. \cite[p. 3]{Devlin2018}
+Because of resource limitations, the BERT\textsubscript{BASE} model is used in this research.
+Working with \ac{BERT} involves two steps.
 
-\end{lstlisting}
+\subsection{Pre-training}
+In the \textit{pre-training} step, \ac{BERT} learns the general language structure which includes the positions of different words within a sentence and the relationship between successive sentences.
+Since BERT is a language model with a deep architecture, bidirectional training of the word positions is not possible, because the network can trivially predict the target word (<- Elaborate on here). \cite[p. 4]{Devlin2018}
+Therefore \cite{Devlin2018} decided to randomly mask out a number of words in the sentence and then predict the masked words.
+The masking of the words is done by a tokenizer, which was also released with \ac{BERT}.
+The tokenizer replaces each word with the longest token it can find in the \ac{BERT} vocabulary, that matches the word.
+If no token matches the word exactly, the words are split in multiple tokens.
+For example, the word \textit{discounted} is not in the vocab and the tokenizer therefore splits the word into the sub tokens \textit{discount} and \textit{\#\#ed}.
+Whether that has an effect on the prediction accuracy of \ac{BERT} will be discussed in \ref{ch:experiments}.
+For representing the masked words, the special token \texttt{[MASK]} is used.
+Another special token is the \texttt{[CLS]} token, which is prepended to each input sequence and holds the meaning of this sequence after the \textit{fine-tuning} procedure \cite[p. 4]{Devlin2018}.
+To learn the relationship between two sentences, \ac{BERT} is trained to predict the second sentence based on the first one.
+This task is important, if \ac{BERT} is later used for question answering tasks.
+Since this type of task is not important in modeling an annual or quarterly report, it was no primary aim to improve this accuracy.
+Still, the results of the next sentence prediction task are presented in Chapter \ref{ch:experiments}.
 
-You can also include listings from a file directly:
+Because \ac{BERT} is using Tensorflow as a backend, it expects the input data to be in the TFRecord file format.
+TFRecord is a binary file, which contains the tokenized text and the tokens that are masked.
+Because the creation of each TFRecord file takes a few seconds, the dataset is again splitted to optimize the processing with multiple cores, as it can be seen in Listing \ref{py:split_data_and_spawn_processes}.
+\lstinputlisting[language=Python,caption={The dataset is splitted to optimize the TFRecord creation on multicore systems.},label={py:split_data_and_spawn_processes}]{listings/split_data_and_spawn_processes.py}
+The actual TFRecord creation is handled by a function shown in Listing \ref{py:handle_pretraining_data_creation}.
+A huge part of this code is taken from the \texttt{main()} function of create\_pretraining\_data.py from the official \ac{BERT} repository\footnote{The official \ac{BERT} repository on GitHub: \url{https://github.com/google-research/bert}}, with the modification that the script creates the TFRecord files for multiple input files at once.
+\lstinputlisting[language=Python,caption={\texttt{\_handlePretrainingDataCreation()} creates the TFRecord files for a subset of all business reports},label={py:handle_pretraining_data_creation}]{listings/handle_pretraining_data_creation.py}
 
-\lstinputlisting[language=Python,caption={This is an example of included listing},captionpos=b]{listings/example.py}
+\subsection{Fine-Tuning}
+The \textit{fine-tuning} step is used to optimize \ac{BERT} for a specific task.
+This can be a task like question answering or sentence classification.
+Sentence classification is the task for which \ac{BERT} was fine-tuned in this research.
+Since each input sequence to \ac{BERT} is a part of a larger report, the sequences "inherit" their label from this report.
+
+\subsection{Extracting feature vectors}

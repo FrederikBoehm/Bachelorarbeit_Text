@@ -29,7 +29,7 @@ Alphavantage does not provide historic stock prices for delisted companies, ther
 After this data has been loaded, the reports are indexed in two steps.
 First the \ac{SRAF} index file is looped chronologically starting from the 01/01/2004.
 For each entry, it is checked if the publishing company is part of the \ac{SP} 500 at the release day.
-If it is, the \ac{SRAF}-specific metadata is removed from the file and the report is splitted into sentences using the sentencizer from the python packaga spaCy.
+If it is, the \ac{SRAF}-specific metadata is removed from the file and the report is splitted into sentences using the sentencizer from the python package spaCy.
 Since \acs{BERT} has a maximum text length it can process, it was interesting how long some of the resulting senteces were.
 Bar chart \ref{figure:words_distribution} shows the distribution of different words per sentences.
 
@@ -64,4 +64,5 @@ The change ratio \textit{CR} on the date \textit{d} of a company with the ticker
 \end{equation}
 Whereby $p_{open, d, t}$ is the opening stock price on the day of the report release and $p_{close, d + 2, t}$ is the closing price two days after the report has been released.
 If the resulting change ratio is negative the report is labeled as \textit{negative} else it is labeled as positive.
+The resulting \ac{CSV} file has 24609 entries and each of these entries references one parsed report file.
 
