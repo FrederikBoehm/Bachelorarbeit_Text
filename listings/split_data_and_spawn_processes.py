@@ -9,7 +9,10 @@ def _splitDataAndSpawnProcesses(input_files, output_dir):
         splitted_files_list = input_files[sObject]
         print(splitted_files_list)
 
-        process = Process(target=_handlePretrainingDataCreation, args=(splitted_files_list, start_index, end_index, output_dir))
+        process = Process(target=_handlePretrainingDataCreation, args=(splitted_files_list,
+                                                                       start_index,
+                                                                       end_index,
+                                                                       output_dir))
         process.start()
         processes.append(process)
 

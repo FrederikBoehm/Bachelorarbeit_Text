@@ -1,0 +1,80 @@
+<Header>
+<FileStats>
+    <FileName>20150130_10-K_edgar_data_1018724_0001018724-15-000006_1.txt</FileName>
+    <GrossFileSize>15432046</GrossFileSize>
+    <NetFileSize>263503</NetFileSize>
+    <NonText_DocumentType_Chars>3899224</NonText_DocumentType_Chars>
+    <HTML_Chars>3850780</HTML_Chars>
+    <XBRL_Chars>4650830</XBRL_Chars>
+    <XML_Chars>2555666</XML_Chars>
+    <N_Tables>81</N_Tables>
+    <N_Exhibits>13</N_Exhibits>
+</FileStats>
+<SEC-Header>
+0001018724-15-000006.hdr.sgml : 20150130
+<ACCEPTANCE-DATETIME>20150129193808
+ACCESSION NUMBER:		0001018724-15-000006
+CONFORMED SUBMISSION TYPE:	10-K
+PUBLIC DOCUMENT COUNT:		14
+CONFORMED PERIOD OF REPORT:	20141231
+FILED AS OF DATE:		20150130
+DATE AS OF CHANGE:		20150129
+
+FILER:
+
+	COMPANY DATA:	
+		COMPANY CONFORMED NAME:			AMAZON COM INC
+		CENTRAL INDEX KEY:			0001018724
+		STANDARD INDUSTRIAL CLASSIFICATION:	RETAIL-CATALOG & MAIL-ORDER HOUSES [5961]
+		IRS NUMBER:				911646860
+		STATE OF INCORPORATION:			DE
+		FISCAL YEAR END:			1231
+
+	FILING VALUES:
+		FORM TYPE:		10-K
+		SEC ACT:		1934 Act
+		SEC FILE NUMBER:	000-22513
+		FILM NUMBER:		15560475
+
+	BUSINESS ADDRESS:	
+		STREET 1:		410 TERRY AVENUE NORTH
+		CITY:			SEATTLE
+		STATE:			WA
+		ZIP:			98109
+		BUSINESS PHONE:		2062661000
+
+	MAIL ADDRESS:	
+		STREET 1:		410 TERRY AVENUE NORTH
+		CITY:			SEATTLE
+		STATE:			WA
+		ZIP:			98109
+
+</SEC-Header>
+</Header>
+
+ 0001018724-15-000006.txt : 20150130
+
+10-K
+ 1
+ amzn-20141231x10k.htm
+ FORM 10-K
+
+AMZN-2014.12.31-10K 
+
+UNITED STATES 
+  SECURITIES AND EXCHANGE COMMISSION 
+  Washington, D.C. 20549 
+     ____________________________________ 
+  FORM 10-K 
+  ____________________________________  
+  (Mark One) 
+
+For the fiscal year ended   December 31, 2014    
+  or 
+
+For the transition period from            to             . 
+  Commission File No. 000-22513 
+  ____________________________________ 
+  AMAZON.COM, INC. 
+  (Exact Name of Registrant as Specified in its Charter) 
+                   Delaware 
