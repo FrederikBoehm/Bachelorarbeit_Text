@@ -134,7 +134,7 @@ The learning curve for the training of the classifier is presented in figure \re
 The test accuracy of the naive bayes model was 68.1\%, which is a significant improvement over the classification accuracy of single sequences during finetuning.
 This improvement can be explained due to the averaging of the feature vectors of each report.
 That removes random noise from the data which results from the text passages, which have no impact on the stock price.
-A view on the dimension reduced data shows that positive and negative datapoints for the single sequences (figure \ref{figure:pca_sequence}) overlap each other more than for the averaged features, which represent the document (figure \ref{figure:pca_document}).
+A view on the dimension reduced data shows that positive and negative datapoints for the single sequences (figure \ref{figure:pca_sequence}) overlap each other more than for the document embeddings (figure \ref{figure:pca_document}).
 \begin{figure}[h]
     \begin{subfigure}{0.5\textwidth}
         \centering
@@ -151,6 +151,7 @@ A view on the dimension reduced data shows that positive and negative datapoints
     \caption{Dimension reduced plots of the datapoints with \ac{PCA}.}
     \label{figure:pca}
 \end{figure}
+Figure \ref{figure:pca_sequence} shows all 1195631 sequence embeddings created by \ac{BERT} and figure \ref{figure:pca_document} shows the 24483 document embeddings, which are the averages of the sequence embeddings per document.
 
 \subsection{K-nearest neighbor classifier}
 As a second classifier the K-nearest neighbor classifier was tested.
@@ -349,7 +350,7 @@ The learning curve in figure \ref{figure:knn_learning_std} suggests again that t
 The accuracy on the test dataset was 68.3\% which is no improvement to the previous experiment.
 
 \subsection{\acl{SVM}}
-For the \ac{SVM} the optimal values of $C$ and $\gamma$ changed as well, as the new validation curves (figure \ref{figure:svm_validation_std}) show.
+For the \ac{SVM} the optimal values of $C$ and $\gamma$ changed as well, as the new validation curves in figure \ref{figure:svm_validation_std} show.
 \begin{figure}[h]
     \begin{subfigure}{0.5\textwidth}
         \centering
@@ -378,7 +379,7 @@ For the \ac{SVM} the optimal values of $C$ and $\gamma$ changed as well, as the 
     \caption{Validation curves for different values of C when using the average and the standard deviation of the features.}
     \label{figure:svm_validation_std}
 \end{figure}
-The highest accuracy is now reached at $C=100000$ and $\gamma$ set to $1\cdot10^{-7}$ with 68.7\% on the validation dataset.
+The highest accuracy is now reached with $C=100000$ and $\gamma$ set to $1\cdot10^{-7}$ with 68.7\% on the validation dataset.
 These hyperparameters lead to the learning curve in figure \ref{figure:svm_learning_std}.
 \begin{figure}[h]
     \centering
@@ -386,8 +387,10 @@ These hyperparameters lead to the learning curve in figure \ref{figure:svm_learn
     \caption{Learning curve for the \ac{SVM} with $C=100000$ and $\gamma=1\cdot10^{-7}$.}
     \label{figure:svm_learning_std}
 \end{figure}
-The \ac{SVM} with $C=100000$ and $\gamma=1\cdot10^{-7}$ reached a test accuracy of 69.1\%, which is worse than the 69.3\% accuracy that was reached, when only using the averages of the features.
+The \ac{SVM} with $C=100000$ and $\gamma=1\cdot10^{-7}$ reached a test accuracy of 69.1\%, which is worse than the 69.3\% accuracy that was reached, when only the averages of the sequence embeddings were used.
+\clearpage
 
+\section{Summary of the experiments}
 Table \ref{table:test_results} summarizes the test results of the classifiers.
 As it can be seen all classifiers performed approximatly similar, however the \ac{SVM} clearly achieved the best accuracy at 69.3\% with the hyperparameters $C=100$ and $\gamma=0.0001$.
 \begin{table}[h]
@@ -404,6 +407,40 @@ As it can be seen all classifiers performed approximatly similar, however the \a
     \caption{Test accuracies of the different classifiers.}
     \label{table:test_results}
 \end{table}
+Although the classification accuracies between 68.1\% and 69.3\% seem like the classifiers can seperate a positive report from a negative rather well, one might argue that the classifiers did not learn to distinguish a positive from a negative report but to classify the filing company as \textit{good} or \textit{bad}.
+The idea behind that assumption is that the \ac{BERT} embeddings might contain so much information that the classifiers can distinguish the companies.
+If a company only releases reports that lead to a positive market reaction, the classifier then learns that it is a \textit{good} company and the opposite for companies that only release negative reports.
+To test this hypothesis the classification accuracies per company were determined.
+If the hypothesis is true the accuracies should be affected if the training data for that company differs from the test data.
+The training and the test data for each company can both be represented as a vector in the form
+\begin{equation}
+    data\_structure_{c} = \begin{pmatrix}num\_pos\_samples_{c}\\num\_neg\_samples_{c}\end{pmatrix}
+    \label{equation:data_structure_train}
+\end{equation}
+which allows to compute the cosine similarity between these vectors:
+\begin{equation}
+    similarity\_train\_test = \frac{data\_structure_{c, train} \cdot data\_structure_{c, test}}{\abs{\abs{data\_structure_{c, train}}} \abs{\abs{data\_structure_{c, test}}}}
+    \label{equation:data_structure_train}
+\end{equation}
+The cosine similarity in this context gives a measurement per company of how similar the test data is to the train data.
+For example, if the training dataset and the test dataset both contain only positive reports of that company the cosine similarity will be 1, if the training dataset contains only positive samples for that company and the test dataset contains only negative reports the cosine similarity will be 0.
+There are in fact cases where the hypothesis is true:
+For example \textit{The New York Times Company} had 18 negative and 4 positive reports in the training dataset, in the test dataset however, 6 reports were positive and 1 was negative.
+That indeed led to a classification accuracy of 0\% for the Naive Bayes and 28.6\% for the \ac{KNN} and the \ac{SVM}.
+Another example would be \textit{NRG Energy Inc} where 17 reports were positive and 9 negative in the train dataset, but in the test dataset only 1 report was positive and 6 were negative.
+All classifiers were only able to classify the test reports with an accuracy of 14.3\%.
+Still a general trend between the similarity of the train and test data on company level and the obtained accuracy with the \ac{SVM} could not be observed as figure \ref{figure:company_cos_similarity_accuracy} shows.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.5\textwidth]{figures/accuracy_per_cos_similarity_svm.png}
+    \caption{Shows the classification accuracy with the \ac{SVM} depending on the similarity of the train and test dataset for each company.}
+    \label{figure:company_cos_similarity_accuracy}
+\end{figure}
+Each point represents a company; if the hypothesis was true, the classification accuracy for companies that have a high cosine similarity between the train and test data should be higher than for companies with a low cosine similarity between the train and test data.
+Since the other classifiers did also not show this trend, it can be concluded that the classifiers can in fact distinguish positive from negative reports.
+The test however showed another interesting property of the dataset, which is that the train and test dataset are really similar per company.
+This can be concluded from the large amount of points in figure \ref{figure:company_cos_similarity_accuracy} with a high cosine similarity between the train and test data.
+
 
 
 

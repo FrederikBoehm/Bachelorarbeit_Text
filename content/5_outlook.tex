@@ -6,8 +6,15 @@ The first thing that is problematic is, that trading fees of the stock exchanges
 That means that even if the classifier correctly predicts a positive price change, there is still a chance, that the total return is negative, if the fees exceed the stock price gains.
 Another issue is, that the classifiers only make assumptions about a time span of two days, which is just a small fraction of all trading days in a year.
 Therefore all losses within these two days can be compensated during the remaining year and, vice versa, all gains in this small time span can be lost again in the following period.
-In general the introduced algorithms could be described as short-term speculating agents, which speculate on rising or falling stock prices in the next two days from the report release day.
 To determine whether the algorithms cound also be used in a long-term scenario, it would be necessary to run a simulation in which stocks are bought based on the classification results.
+A possible simulation that test how well the short-term prediction works during one year is depicted by the flowchart in figure \ref{figure:long_term_simulation}.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\textwidth]{figures/Simulation.png}
+    \caption{A possible simulation that tests how well the short-term prediction work in a long-term scenario.}
+    \label{figure:long_term_simulation}
+\end{figure}
+% In general the introduced algorithms could be described as short-term speculating agents, which speculate on rising or falling stock prices in the next two days from the report release day.
 
 A more sophisticated approach would be to immediately predict the price change for a longer time.
 The aim could be for example, to predict the stock price change ratio for the next five years, based on business reports from the past five years.
