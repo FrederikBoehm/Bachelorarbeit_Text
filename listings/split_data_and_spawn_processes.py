@@ -1,4 +1,4 @@
-def _splitDataAndSpawnProcesses(input_files, output_dir):
+def _splitDataAndSpawnProcesses(input_files, output_dir, bert_object):
     cpu_cores = cpu_count()
     processes = []
     print(f'Detected {cpu_cores} cores, splitting dataset...')
@@ -12,7 +12,8 @@ def _splitDataAndSpawnProcesses(input_files, output_dir):
         process = Process(target=_handlePretrainingDataCreation, args=(splitted_files_list,
                                                                        start_index,
                                                                        end_index,
-                                                                       output_dir))
+                                                                       output_dir,
+                                                                       bert_object))
         process.start()
         processes.append(process)
 

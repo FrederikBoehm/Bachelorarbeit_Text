@@ -1,14 +1,14 @@
 \chapter{Method}\label{ch:method}
 
-The problem can generally be described as a classification problem, where an algorithm tries to predict the label or class of some input features.
-For this thesis the input is the document representation in the form of text embeddings, which are labeled with the nominal stock price change, that the report created, so \textit{positive} or \textit{negative}.
+As stated in the introduction, this thesis examines a way to train a machine learning classifier to predict the nominal stock price change.
+This chapter will now introduce the classifiers that were trained, as well as the approach to represent the business reports as feature vectors using \acs{BERT}.
 
 \section{Overview of machine learning algorithms}
-All these algorithms have in common, that they take a n-dimensional input vector to predict m classes.
+All these algorithms have in common, that they take a $n$-dimensional input vector to predict $m$ classes.
 Mathematically this can be seen as a function $f(x)=y$ with $x\in\mathbb{R}^n$ and $y\in\{0, 1\}$, since it is a binary classification problem.
 The algorithms are able to find patterns in the data and can autonomously improve their prediction performance.
 This learning process requires a training phase.
-This section addresses the different machine learning algorithms used in the research which are the Naive Bayes classifier, the \acl{KNN} classifier, the \acl{SVM} and the \acl{LSTM} as well as the method to create document embeddings.
+During the research a Naive Bayes classifier, a \acl{KNN} classifier, a \acl{SVM} and a \acl{BLSTM} was trained.
 \subsection{Naive Bayes classifiers}
 The idea behind the Naives Bayes classifier is, that certain input features correlate with a certain class, which means that these input features result with a high probability from this certain class.
 The Naive Bayes classifier makes use of the assumption, that each feature of the input vector is independent to one another.
@@ -17,46 +17,45 @@ Using the Bayes theorem (equation \ref{equation:bayes}), the Naive Bayes classif
     P(Y|X) = \frac{P(X|Y)P(Y)}{P(X)}
     \label{equation:bayes}
 \end{equation}
-% During training the algorithm has to determine the probabilities on the right side of the equation $P(X|Y), P(Y)$ and $P(X)$.
 The probability $P(Y)$ is given by the proportion of a class in the whole training dataset.
 For a balanced dataset with two classes this gives the probabilities $P(y_1, y_2)=\langle0.5,0.5\rangle$.
-% $P(X|Y)$ is given by $P(X|Y)=\frac{P(X \implies Y)}{P(Y)}$.
 Determining $P(X|Y)$ is not as trivial:
 Since $X$ can be a vector $(x_1, x_2, ..., x_n)$ of variables, it would be necessary to determine $P(x_1 \land x_2 \land ... \land x_n|Y)$ for all combinations of $x_i$, which would require $O(2^n)$ space to save the values and make it impossible to use the algorithm with high dimensional input \cite[p. 493]{Russel2016}.
 The assumption that $x_1, ..., x_n$ are independent, however, simplifies this problem.
 $P(x_1 \land x_2 \land ... \land x_n|Y)$ can now be decomposed into $P(x_1|Y)\cdot P(x_2|Y)\cdot...\cdot P(x_n|Y)$ which only requires $O(n)$ to save the conditional probabilities and allows for practical usage of the algorithm \cite[p. 499]{Russel2016}.
 So during training the algorithm has to determine $P(Y)$ and $P(x_1|Y), P(x_2|Y) ... P(x_n|Y)$.
 The probability $P(X)$ is a normalization factor which is chosen so that $P(y_1|X)+P(y_2|X)=1$ \cite[p. 493]{Russel2016}.
-During prediction phase $P(Y|X)$ is computed for all classes and the class with the highest probability given $X$ will be the classification result: $y_pred = arg max_i P(y_i|X)$
+During prediction phase $P(Y|X)$ is computed for all classes and the class with the highest probability given $X$ will be the classification result:
+\begin{equation}
+    y_{pred} = arg max_i P(y_i|X)
+\end{equation}
 Even though the assumption, that the features are independent to one another is generally not true, the Naive Bayes classifier often performs equally or even better than more complex methods \cite[p. 211]{Hastie2009}.
-For this research, the Naive Bayes implementation from scikit-learn was used in combination with the learning curve generator of the library.
+For this research, the Naive Bayes implementation from scikit-learn was used.
 
 \subsection{\acl{KNN} classifiers}
 As the name of this method implies, a nearest neighbor classifier makes its predictions based on the surrounding data points.
 Because every input to this classifier can be seen as a point in a n-dimensional space, the \ac{KNN} can compute the distances to other points.
 The distance can be measured as Euclidean distance, however other distance metrics are also possible.
-Scikit-learn's \texttt{KNeighborsClassifier} for example, measures the distance with the Minkowski distance, which is a generalisation of the Euclidean distance.\footnote{\url{https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsClassifier.html}}
+Scikit-learn's \texttt{KNeighborsClassifier} for example, measures the distance with the Minkowski distance, which is a generalisation of the Euclidean distance\footnote{\url{https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsClassifier.html}}:
 \begin{equation}
-    % d_{ab} = \left(\sum_{i=1}^n \abs{a_i - b_i} ^p \right)^{\frac{1}{p}}
     d(x_1, x_2) = \left(\sum_{i=1}^n \abs{x_{1,i} - x_{2,i}} ^p \right)^{\frac{1}{p}}
 \end{equation}
 The Minkowski distance collapses to the Euclidean distance for $p=2$ and to the Manhatten distance for $p=1$ \cite[p. 738]{Russel2016}.
 The predicted class is then the most common class of all $k$ neighbors.
 Because the \ac{KNN} classifier makes use of a geometric property of the input data, it is important to scale each feature to have a mean of zero and a variance of one \cite[p. 465]{Hastie2009}.
-The optimum $k$ can be found with cross validation, which is described in section \ref{subsec:cross_validation}.
 
 In this thesis the \ac{KNN} implementation from scikit-learn was used as well as the \texttt{StandardScaler} to scale the features.
-% In scikit-learn this is done with the \texttt{StandardScaler}.
-$k$ was determined by creating a validation curve, which shows how the accuracy changes for different values of $k$.
+$k$ was determined by creating a validation curve (section \ref{subsec:learning_validation_curve}), which shows how the accuracy changes for different values of $k$.
 It is implemented with the code in listing \ref{py:knn_validation_curve}.
 The results of this finding are presented in chapter \ref{ch:experiments}.
 \lstinputlisting[language=Python,caption={Creates data for a validation curve},captionpos=b, label={py:knn_validation_curve}]{listings/knn_validation.py}
 The \texttt{knn\_\_n\_neighbors} argument tells the \texttt{validation\_curve} function, which parameter it should test for the provided estimator.
-In this case the estimator is a pipeline, which wraps the \texttt{StandardScaler} and the \texttt{validation\_curve} and executes them sequentially for every fold.
-The number of the folds for the cross validation is set with the \texttt{cv} argument.
+In this case the estimator is a pipeline, which wraps the \texttt{StandardScaler} and the \texttt{KNeighborsClassifier} and executes them sequentially.
+The \texttt{validation\_curve} also allows to use cross-validation, where the number of folds can be set with the \texttt{cv} argument.
+Cross-validation is explained in detail in section \ref{subsec:cross_validation}.
 
 \subsection{\acl{SVM}s}
-A \ac{SVM} tries to fit a decision boundary between the points of two classes, so that the surrounding margin is maximized.
+A \ac{SVM} tries to fit a decision boundary between the points of two classes, so that the surrounding margin is maximised.
 This decision boundary can mathematically be seen as a hyperplane in the n dimensional space of the data points.
 For a two dimensional space that results in a line:
 \begin{figure}[h]
@@ -68,22 +67,18 @@ For a two dimensional space that results in a line:
 \footnotetext{A modified version of the example on scikit-learn: \url{https://scikit-learn.org/stable/auto_examples/svm/plot_separating_hyperplane.html}}
 The line in figure \ref{figure:svm_decision_boundary} represents the decision boundary and the dashed lines mark the borders of the margin with maximum width, respecting some constraints which will be discussed in this section.
 The circled points mark the \textit{support vectors} which are used to determine the hyperplane.
-% This allows the \ac{SVM} to generalize well \cite[p. 744]{Russel2016}.
 The decision boundary is mathematically a hyperplane defined by:
 \begin{equation}
     f(x)=x^T\beta + \beta_0=0
     \label{equation:svm_hyperplane}
 \end{equation}
 where $\beta$ is a unit vector, $x_i \in \mathbb{R}^n$ are the sample points and $y_i \in \{-1, 1\}$ are the labels to these points.
-Therefore the aim is to maximize the margin between the training points and the hyperplane, which can be re-expressed as
-% \begin{multline}
-%     max_{\beta, \beta_0, \norm{\beta}=1} M \\ subject to y_i(x_i^T \beta + \beta_0) \geq M, i = 1, ..., N
-% \end{multline}
-% Mathematically this can be expressed in the form:
-\begin{multline}
-    min_{\beta, \beta_0}\frac{1}{2}\abs{\abs{\beta}}^2 + C\sum_{i=1}^N\xi_i \\
-    subject to \xi_i \geq 0, y_i(x_i^T\beta + \beta_0)\geq 1 - \xi_i \forall i
-\end{multline}
+Therefore the aim is to maximise the margin between the training points and the hyperplane, which can be re-expressed as
+\begin{align}
+    & min_{\beta, \beta_0}\frac{1}{2}\abs{\abs{\beta}}^2 + C\sum_{i=1}^N\xi_i \\
+\text{subject to }
+    & \xi_i \geq 0, y_i(x_i^T\beta + \beta_0)\geq 1 - \xi_i \forall i \notag
+\end{align}
 where $\xi_i$ is a penalty term, that increases with the distance a data point $x_i$ lies on the wrong side of its margin \cite[p. 7]{Fletcher2008}.
 Since this penalty terms are weighted by the constant $C$, the width of the margin varies with choosing the value of $C$.
 If $C$ is set really low, a broad margin with many support vectors is used.
@@ -112,9 +107,9 @@ A way to find decision boundaries for data which is not linearly seperable is to
 Thus the data becomes linearly seperable in the enlarged feature spaces, which has the effect of nonlinear boundaries in the original space \cite[p.423]{Hastie2009}.
 One typical kernel function is the \textit{Radial Basis Kernel} which has the following form:
 \begin{equation}
-    K(x_i, x_j) = e^{-\left(\frac{\abs{\abs{x_i - x_j}}^2}{2\sigma^2}\right)}
+    K(x_i, x_j) = e^{-\frac{\abs{\abs{x_i - x_j}}^2}{2\sigma^2}}
 \end{equation}
-The kernel function is used in the dual Lagrangian function of equation \ref{equation:svm_hyperplane}, which is then again optimized.
+The kernel function is used in the dual Lagrangian function of equation \ref{equation:svm_hyperplane}, which is then again optimised.
 This has the implicit effect, that the datapoints are mapped to a higher dimensional feature space.
 Figure \ref{figure:kernel_3d} shows this mapping to a three-dimensional space with the hyperplane, that seperates the classes, figure \ref{figure:kernel_decision_boundary} shows the base feature space with the resulting circular decision boundary.
 \begin{figure}[h]
@@ -163,11 +158,15 @@ The results of this computation on the output layer is the prediction of the net
 At training time, the units of the output layer then compute an error between the prediction it made and the actual value it should have predicted.
 A common error metric is the squared-error loss $Loss_k$ on an output node $k$, which is defined in equation \ref{equation:squared_error_loss} \cite[p. 735]{Russel2016}.
 \begin{equation}
-    Loss_k=(y_k - a_k)
+    Loss_k=(y_k - a_k)^2
     \label{equation:squared_error_loss}
 \end{equation}
 With $a_k$ being the predicted value on output $k$ and $y_k$ being the actual value that should be predicted.
-The aim is to minimize this loss with respect to all weights $w_{i,j}$ in the network $\frac{\partial Loss_k}{\partial w_{i,j}}$, which gives the gradient for the output node $k$.
+The aim is to minimise this loss with respect to all weights $w_{i,j}$ in the network:
+\begin{equation}
+    \frac{\partial Loss_k}{\partial w_{i,j}}    
+\end{equation}
+This gives the gradient for the output node $k$.
 The gradient can be computed with the \textit{back-propagation} algorithm.
 The last layer computes an error term, based on the derivative of the loss function.
 This error term is back-propagated to the previous layer, where each node again computes its own error, by summing the weighted errors of the subsequent nodes.
@@ -177,10 +176,10 @@ This is again repeated until the input layer is reached, then the weights betwee
 A special class of neural networks are the \acp{RNN}, which have the ability to gather information from the order of the input items.
 Therefore each input example consists of several \textit{timesteps}.
 In case of report classification, like it is done in this thesis, the timesteps are the sentences of the report, which have a clear order to each other.
-To process this sequential data the units in a \acs{RNN} (figure \ref{figure:rnn_unfolded}) are different to the units of a traditional feed-forward neural network.
+To process this sequential data, the units in a \acs{RNN} (figure \ref{figure:rnn_unfolded}) are different to the units of a traditional feed-forward neural network.
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.5\textwidth]{figures/rnn_unfolded.png}
+    \includegraphics[width=0.6\textwidth]{figures/rnn_unfolded.png}
     \caption{The flow of the activations between two timesteps in an RNN as depicted in \cite[p. 12]{Lipton2015}.}
     \label{figure:rnn_unfolded}
 \end{figure}
@@ -192,12 +191,12 @@ A concept to avoid this problem is the \acs{LSTM}, which was proposed by \cite{H
 Figure \ref{figure:lstm_cell} shows the structure of a LSTM cell.
 \begin{figure}[h]
     \centering
-    \includegraphics[width=0.5\textwidth]{figures/lstm_cell.png}
+    \includegraphics[width=0.6\textwidth]{figures/lstm_cell.png}
     \caption{A LSTM cell as depicted in \cite[p. 17]{Lipton2015}.}
     \label{figure:lstm_cell}
 \end{figure}
-Each of these units has an input gate which protects the unit against irrelevant input ($i_c$ in figure \ref{figure:lstm_cell}) and an output gate ($o_c$) which protects other units from possibly irrelevant content in the respective unit \cite[p. 6]{Hochreiter1997}.
-Both, the \ac{RNN} as well as the \ac{LSTM}, have forms that also process the input sequence in the reverse order, the \ac{LSTM} is then called \ac{BLSTM}.
+Each of these units has an input gate which protects the unit against irrelevant input ($i_c$ in figure \ref{figure:lstm_cell}) and an output gate $o_c$ which protects other units from possibly irrelevant content in the respective unit \cite[p. 6]{Hochreiter1997}.
+Both, the \ac{RNN} as well as the \ac{LSTM}, have forms that also process the input sequence in the reverse order; the \ac{LSTM} is then called \ac{BLSTM}.
 
 In this research the \ac{LSTM} implementation from Keras was used.
 Although different network architectures were used, the general implementation with all used layer types is shown in listing \ref{py:lstm_implementation}.
@@ -211,7 +210,7 @@ The \texttt{Dense} layer then is a layer with the regular feed forward units des
 A key aspect is the usage of \texttt{None} in the first dimension of the \texttt{input\_shape} on line 11 in listing \ref{py:lstm_implementation}.
 This dimension defines the number of time steps each input sample has.
 Since each report has a different length, this value was set to \texttt{None}.
-Even though the \ac{LSTM} can handle input with different time steps, on batch level it still requires to have input with a fixed number of time steps.
+Even though the \ac{LSTM} can handle input with a different number of time steps, on batch level it still requires the input to have a fixed number of time steps.
 Therefore the reports need to be grouped by their lengths, which was accomplished with the \texttt{ReportSequence} class (Listing \ref{py:lstm_report_sequence}).
 \lstinputlisting[language=Python,caption={The \texttt{ReportSequence} class creates batches with reports of same length.},label={py:lstm_report_sequence}]{listings/report_sequence.py}
 This grouping is then used by calling the \texttt{fit\_generator} method on the model with an instance of the \texttt{ReportSequence} class in listing \ref{py:lstm_implementation} on line 26.
@@ -229,7 +228,7 @@ This embedding step is described in the next section.
 \label{subsec:methods_for_document_representation}
 The task of the embedding step is to map a text of variable length to a vector of fixed length, which is necessary to train a classification algorithm.
 The most basic approach for creating a text representation is the bag-of-words model.
-For that a vocabulary is created which contains each word of a text corpus.
+For that, a vocabulary is created which contains each word of a text corpus.
 Each word in this vocabulary is represented by a vector with the dimensionality of the vocabulary size, having a $1$ on the entry at which the word is stored in the vocabulary and zeros on all other positions.
 To create the representation of a document, the vectors of the words in the document are summed \cite[p. 13]{Grzegorczyk2018}.
 Since a single document typically does not contain all words of the vocabulary this vector is sparse and an inefficient representation of the text.
@@ -255,25 +254,25 @@ For this model an additional paragraph representation is trained in parallel to 
 The paragraph vector is incorporated in all word prediction contexts, therefore it captures the meaning of the whole document \cite[p. 3]{Mikolov2014}.
 
 At the time of publication, \textit{Paragraph Vector} created state-of-the-art results in different sentiment tasks \cite[pp. 4-7]{Mikolov2014}, this thesis however, will use the modern language representation model \ac{BERT} to create the document embeddings.
-In comparison to \textit{Paragraph Vector}, \ac{BERT} can use distant context words to the same extend as close words to create an embedding, whereas for the \textit{Paragraph Vector} model distant words contribute less to the embedding of a center word \cite[p. 4]{Mikolov2013}.
-The ability to incorporate these long range relations is a result of the Transformer architecture which was proposed in \cite{Vaswani2017} and is the basis of \ac{BERT}.
+In comparison to \textit{Paragraph Vector}, \ac{BERT} can use distant context words to the same extend as close words to create an embedding, whereas for the \textit{Paragraph Vector} model, distant words contribute less to the embedding of a center word \cite[p. 4]{Mikolov2013}.
+The ability to incorporate these long range relations is a result of the Transformer architecture, which was proposed in \cite{Vaswani2017} and is the basis of \ac{BERT}.
 \begin{figure}[h]
     \centering
     \includegraphics[width=0.5\textwidth]{figures/transformer_architecture.png}
     \caption{The Transformer architecture as proposed in \cite[p. 3]{Vaswani2017}.}
     \label{figure:transformer_architecture}
 \end{figure}
-From the pure application area, Transformer is really similar to \acp{RNN} or \acp{LSTM}, as it is also optimized for handling sequential data.
+From the pure application area, Transformer is really similar to \acp{RNN} or \acp{LSTM}, as it is also optimised for handling sequential data.
 It uses an encoder-decoder structure with a self-attention mechanism.
 The encoder maps an input sequence to a vector representation, which the decoder uses to create an output sequence.
 This can be used for example for translation tasks, where a sentence from the original language is passed to the encoder and the decoder returns the translated sentence \cite[p. 392]{Goodfellow2016}.
-Traditional encoder-decoder models use \acp{RNN} or \acp{LSTM} for the encoder and decoder with the vector representation being the final hidden state of the encoder \cite[p. 392]{Goodfellow2016}.
+Traditional encoder-decoder models use \acp{RNN} or \acp{LSTM} for the encoder and decoder, with the vector representation being the final hidden state of the encoder \cite[p. 392]{Goodfellow2016}.
 Enhancing these models with Attention, the hidden states of all encoder units can be used, with the focus on the most relevant states.
 The Transformer architecture now relies purely on Attention and the sequential information is manually encoded in the data, which is labeled as \textit{Positional Encoding} in figure \ref{figure:transformer_architecture}.
 Attention is accomplished by computing a weighted sum of the hidden states.
 The weights are given by the similarity between the hidden states of the encoder, which are called the \textit{keys} and the most recent hidden state of the decoder, called the \textit{queries}.
-This similarity between the queries and the keys is calculated as a dot-product, on which a softmax function is applied afterwards \cite[p. 4]{Vaswani2017}.
-Between these weights and the \textit{values}, which are the hidden states of the encoder as well, another dot-product is calculated, giving the weighted sum.
+Both, the \textit{keys} and the \textit{queries}, are matrices and the similarity between them is calculated as a multiplication, on which a softmax function is applied afterwards \cite[p. 4]{Vaswani2017}.
+Between these weights and the \textit{values}, which are the hidden states of the encoder as well, another matrix multiplication is calculated, giving the weighted sum.
 In the Transformer model, this Attention mechanism is combined to a \textit{multi-head attention}.
 The multi-head attention consists of multiple attention layers, each performing the attention on different linear projections of the query, key and value inputs and concatenating the results in the end \cite[pp. 4-5]{Vaswani2017}.
 The advantage of the Transformer model is a high parallelization of the computation and the already mentioned capability to capture long range relations \cite[p. 2]{Vaswani2017}.
@@ -283,18 +282,18 @@ Because of resource limitations, the BERT\textsubscript{BASE} model is used in t
 Another important property of \ac{BERT} that can't be ignored, is that it can only process input text with a maximum sequence length of 512 tokens.
 \textit{Tokens} are the entries in the vocabulary of \ac{BERT}.
 Before \ac{BERT} can process the input text, it has to be tokenized.
-In this tokenization step, each word from the input sequence is replaced with the longest token it can find in the \ac{BERT} vocabulary, that matches the word.
+In this step, each word from the input sequence is replaced with the longest token in the \ac{BERT} vocabulary, that matches the word.
 If no token matches the word exactly, the word is split in multiple tokens.
 For example, the word \textit{discounted} is not in the vocab and the tokenizer therefore splits the word into the sub tokens \textit{discount} and \textit{\#\#ed}.
 The restriction to a maximum sequence length of 512 tokens implies, that it is not possible to pass a whole business report to \ac{BERT}.
 The segmentation into sentences with spaCy, that was described in section \ref{sec:data_preprocessing}, is part of solving this problem, however in some cases the resulting sentences are way shorter than the sequence length of 512 tokens.
 Therefore the sentences are again concatenated until the maximum sequence length is reached.
 For most applications working with \ac{BERT} involves two steps, a pre-training and a fine-tuning step.
-In this research an additional feature extracting step was added which is described in section \ref{subsec:extracting_feature_vectors}.
+Since \ac{BERT} is used to create the text embeddings, an additional feature extracting step was added which is described in section \ref{subsec:extracting_feature_vectors}.
 
 \subsection{Pre-training}
 In the \textit{pre-training} step, \ac{BERT} learns the general language structure which includes the positions of different words within a sentence and the relationship between successive sentences.
-Since BERT is a language model with a deep architecture, bidirectional training of the word positions is not possible, because the network can trivially predict the target word. \cite[p. 4]{Devlin2018} %(<- Elaborate on here)
+Since BERT is a language model with a deep architecture, bidirectional training of the word positions is not possible, because the network can trivially predict the target word \cite[p. 4]{Devlin2018}. %(<- Elaborate on here)
 Therefore \cite{Devlin2018} decided to randomly mask out a number of words in the sentence and then predict the masked words.
 \begin{figure}[h]
     \centering
@@ -302,18 +301,17 @@ Therefore \cite{Devlin2018} decided to randomly mask out a number of words in th
     \caption{Illustration of the \textit{masked language model} pre-training task.}
     \label{figure:masked_lm}
 \end{figure}
-The masking of the words is done by a tokenizer, which was also released with \ac{BERT}.
+The masking of the words is also done by the already introduced tokenizer.
 For representing the masked words, the special token \texttt{[MASK]} is used.
 Another special token is the \texttt{[CLS]} token, which is prepended to each input sequence and holds the meaning of this sequence after the \textit{fine-tuning} procedure \cite[p. 4]{Devlin2018}.
 The whole task of predicting masked words based on their contexts is called \textit{masked language model} \cite[p. 4]{Devlin2018}.
 The second task during pre-training is the binary \textit{next sentence prediction}.
-For that, given a sentence \textit{A}, the sentence \textit{B} is either the actual successive sentence or a randomly chosen sentence from the training corpus.
-\ac{BERT} has to predict then, whether the sentence is the successive sentence or not.
+For that, \ac{BERT} has to predict whether a sentence \textit{B} is the actual successive sentence to a sentence \textit{A} or whether it s a randomly chosen sentence from the training corpus.
 
 Because \ac{BERT} is using Tensorflow as a backend, it expects the input data to be in the TFRecord file format.
 TFRecord is a binary file format, which contains the tokenized text and the tokens that are masked.
-Because the creation of each TFRecord file takes a few seconds, the dataset is again split to optimize the processing with multiple cores, as it can be seen in Listing \ref{py:split_data_and_spawn_processes}.
-\lstinputlisting[language=Python,caption={The dataset is split to optimize the TFRecord creation on multicore systems.},label={py:split_data_and_spawn_processes}]{listings/split_data_and_spawn_processes.py}
+Because the creation of each TFRecord file takes a few seconds, the dataset is again split to optimise the processing with multiple cores, as it can be seen in Listing \ref{py:split_data_and_spawn_processes}.
+\lstinputlisting[language=Python,caption={The dataset is split to optimise the TFRecord creation on multicore systems.},label={py:split_data_and_spawn_processes}]{listings/split_data_and_spawn_processes.py}
 The \texttt{\_handlePretrainingDataCreation()} function, which is provided as as a callback to the \texttt{Process}, is mostly similar to the \texttt{main()} function of \texttt{create\_pretraining\_data.py} from the official \ac{BERT} repository\footnote{The official \ac{BERT} repository on GitHub: \url{https://github.com/google-research/bert}}.
 It was modified, so it creates the TFRecord files for multiple input files at once.
 
@@ -321,7 +319,7 @@ The actual training of \ac{BERT} was done with the script in listing \ref{py:run
 \lstinputlisting[language=Python,caption={\ac{BERT} pre-training.},label={py:run_pretraining}]{listings/run_pretraining.py}
 Again most of the source code is similar to the \texttt{main()} function of \texttt{run\_pretraining.py} from the official \ac{BERT} repository.
 One change that was made, was to set the number of checkpoints, that are created during training, to 30 as opposed to 5 as default.
-These checkpoints were later used to validate the model.
+These checkpoints were later used to evaluate the model.
 The validation step was also moved to a seperate script to evaluate the model for every training checkpoint.
 This is accomplished by iterating over the created checkpoints and calling the evaluation code from \ac{BERT} for each of them.
 In the original source code only the final model was evaluated.
@@ -329,17 +327,17 @@ The results are appended to a Pandas DataFrame, which is saved as a \ac{CSV} fil
 
 \subsection{Fine-Tuning}
 \label{subsec:fine_tuning}
-The \textit{fine-tuning} step is used to optimize \ac{BERT} for a specific task.
+The \textit{fine-tuning} step is used to optimise \ac{BERT} for a specific task.
 This can be a task like question answering or sentence classification \cite[pp. 5-7]{Devlin2018}.
 Even though the final goal is to classify the business reports and not every sentence on its own, the fine-tuning is essential so that the \texttt{[CLS]} token holds a good representation of the sentence\footnote{This hint was mentioned in \texttt{extract\_features.py} on lines 237-239 \url{https://github.com/google-research/bert/blob/fe354751d7de010f60d362ae8d9343849ec39456/extract_features.py}}.
 Since the final aim is to classify each business report, the most similar task was selected for fine-tuning, which is the sentence classification.
 In difference to the pre-training, the sequences for fine-tuning need a label.
 Since each input sequence to \ac{BERT} is a part of a larger report, the sequences "inherit" their label from this report.
-Therefore a sentence of a \textit{positive} report is also labeled \textit{positive} and a sentence of a \textit{negative} report is also labeled as \textit{negative}.
+Therefore every sentence of a \textit{positive} report is also labeled \textit{positive} and every sentence of a \textit{negative} report is also labeled as \textit{negative}.
 Of course this approach seems wrong on the first glance, since a positive report can also contain negative sentences and vice versa.
 However one could also re-interpret the classification task as follows:
 Instead of saying that the label indicates whether a sentence is a \textit{positive} or \textit{negative} sentence, it can also be interpreted as indicating whether the sentence belongs to a \textit{positive} or \textit{negative} report.
-Section \ref{sec:fine_tuning_results} shows how this approach affects fine-tuning.
+The experimental results in section \ref{sec:fine_tuning_results} show how this approach affects fine-tuning.
 
 As opposed to the pre-training, the creation of the TFRecord files was part of the training script for fine-tuning.
 Therefore every training run was delayed, because the TFRecord files were generated first.
@@ -355,9 +353,9 @@ This information can be retrieved by accessing the hidden states of the Transfor
 Listing \ref{py:extract_features} shows a snippet of the \texttt{extract\_features.py} script.
 \lstinputlisting[language=Python,caption={Accesses the hidden states from the transformer layers.},label={py:extract_features}]{listings/extract_features.py}
 The official implementation allows to access the hidden states from all layers of the model, however for this thesis only the last layer is used.
-For that the \texttt{layer\_indexes} variable which is passed to the \texttt{model\_fn\_builder} is set to -1.
-Therefore the hidden states of this layer can be accessed by \texttt{result["layer\_output\_0"]} on line 21.
-In theory the \texttt{result} dictionary also includes \texttt{layer\_output\_1, layer\_output\_2, ...}, but the \texttt{layer\_indexes} limits the results.
+For that, the \texttt{layer\_indexes} variable which is passed to the \texttt{model\_fn\_builder} is set to -1.
+Therefore, the hidden states of this layer can be accessed by \texttt{result["layer\_output\_0"]} on line 21.
+In theory, the \texttt{result} dictionary also includes \texttt{layer\_output\_1, layer\_output\_2, ...}, but the \texttt{layer\_indexes} limits the results.
 In the list comprehension on line 23 \texttt{layer\_output[0]} only the hidden states for the first token, the \texttt{[CLS]} token, is accessed.
 The \texttt{for} loop is necessary because the \texttt{predict} method returns an iterator, where each element represents the hidden states for one line of the input file.
 As a summary it can be said, that this implementation only takes the hidden states from the last layer for the first token, while the official implementation takes the hidden states for all tokens from possibly all layers.
@@ -373,47 +371,57 @@ Cross-validation is a method to estimate the prediction accuracy of a model for 
 For that a training dataset is split in $K$ equally sized parts.
 $K-1$ of these parts are then used to train the model and the $k$th part is used to evaluate the model.
 This is repeated for $k=1,2,...,K$ and the resulting accuracies are averaged \cite[p. 242]{Hastie2009}.
-The averaged accuracy is used to optimize the model:
-The hyperparameters of the model are changed so that the averaged accuracy is maximized \cite[p. 242]{Hastie2009}.
-One drawback of the method is that it multiplies the time to train and evaluate the model approximately by the value of $K$ \cite[p. 242]{Hastie2009}.
+The averaged accuracy is used to optimise the model:
+The hyperparameters of the model are changed so that the averaged accuracy is maximised \cite[p. 242]{Hastie2009}.
+One drawback of the method is that the time to train and evaluate the model increases with a larger $K$ \cite[p. 242]{Hastie2009}.
 
 For this research 5-fold cross-validation was used for the Naive Bayes, \ac{KNN}, \ac{SVM} and the \ac{BLSTM}.
+The cross-validation dataset covered 80\% of the whole dataset, therefore for the test dataset remained 20\% of the data.
+Both datasets were balanced so that they include the same number of positive and negative reports.
 The hyperparameters for the \ac{BERT} pre-training and fine-tuning were determined without cross-validation, because \ac{BERT} itself is quite computational expensive.
+Since for \ac{BERT} no cross-validation was used the training dataset covered 60\%, the validation and test dataset both covered 20\% of the data.
+Again all datasets were balanced.
 
 \subsection{Learning and validation curve}
+\label{subsec:learning_validation_curve}
 This thesis uses learning curves to visualise the learning progress of the machine learning models.
 A learning curve is a line chart that shows the accuracy of a machine learning model depending on a second variable, like the training dataset size or the number of epochs a neural network trained \cite[pp. 702-703]{Russel2016}.
 It can give evidence about whether the model would improve its performance if more data was available or the number of epochs was increased.
+Figure \ref{figure:sample_learning_curve} shows a possible learning curve.
 In this thesis, the accuracies of the Naive Bayes, \ac{KNN} and \ac{SVM} are indicated depending on the size of the training dataset and for the \ac{BLSTM} the accuracies are indicated depending on the number of epochs.
 For \ac{BERT} the horizontal axis shows the number of training steps, which is a comparable measurement with the number of epochs (Chapter \ref{ch:experiments}).
 
 Validation curves are used to find the best hyperparameters of a model.
 They show the accuracy of the model depending on different values of this hyperparameter, that can be for example the number of $K$ in the case of the \ac{KNN} or the value of $C$ for a linear \ac{SVM}.
 The best value is then selected by choosing the model that reached the highest validation accuracy \cite[p. 711]{Russel2016}.
+Figure \ref{figure:sample_validation_curve} shows a possible validation curve for a \ac{KNN} classifier, 
 
 In this thesis both of the curves are created in combination with cross-validation.
 \begin{figure}[h]
-    \begin{subfigure}{0.5\textwidth}
-        \includegraphics[width=\textwidth]{figures/knn_sample_learning_curve.png}
-        \caption{The learning curve shows the accuracy depending on the training dataset size.}
-        \label{figure:sample_learning_curve}
-    \end{subfigure}
-    \begin{subfigure}{0.5\textwidth}
-        \includegraphics[width=\textwidth]{figures/knn_sample_validation_curve.png}
-        \caption{The validation curve shows how a change in the value of a hyperparameter affects the accuracy of the model.}
-        \label{figure:bert_pretraining_learning_512_nsp}
-    \end{subfigure}
+    % \begin{subfigure}{0.5\textwidth}
+    %     \includegraphics[width=\textwidth]{figures/knn_sample_learning_curve.png}
+    %     \caption{The learning curve shows the accuracy depending on the training dataset size.}
+    %     \label{figure:sample_learning_curve}
+    % \end{subfigure}
+    % \begin{subfigure}{0.5\textwidth}
+    %     \includegraphics[width=\textwidth]{figures/knn_sample_validation_curve.png}
+    %     \caption{The validation curve shows how a change in the value of a hyperparameter affects the accuracy of the model.}
+    %     \label{figure:sample_validation_curve}
+    % \end{subfigure}
+    \subcaptionbox{The learning curve shows the accuracy depending on the training dataset size.\label{figure:sample_learning_curve}}[0.5\linewidth]{\includegraphics[width=0.5\textwidth]{figures/knn_sample_learning_curve.png}}
+    \subcaptionbox{The validation curve shows how a change in the value of a hyperparameter affects the accuracy of the model.\label{figure:sample_validation_curve}}[0.5\linewidth]{\includegraphics[width=0.5\textwidth]{figures/knn_sample_validation_curve.png}}
     \caption{Sample learning and validation curves of a \ac{KNN} classifier.}
-    \label{figure:bert_pretraining_learning_512}
+    \label{figure:sample_learning_validation_curves}
 \end{figure}
 
 
+\FloatBarrier
 \subsection{\acl{PCA}}
-\acl{PCA} is a methode to reduce the dimensionality of a dataset with loosing as little information as possible.
+\acl{PCA} is a method to reduce the dimensionality of a dataset with loosing as little information as possible.
 In this thesis \ac{PCA} is used to obtain a two dimensional representation of the data, which can then be visualised.
 Mathematically the \ac{PCA} can be seen as the projection of a data matrix $X$ to a target matrix $Y$ with other basis vectors (equation \ref{equation:pca_projection}) \cite[p. 3]{Shlens2014}.
 \begin{equation}
-    PX=Y
+    Y=PX
     \label{equation:pca_projection}
 \end{equation}
 For the application of this thesis $X$ is a $m\times n$ matrix where each column contains the hidden states for the business report.

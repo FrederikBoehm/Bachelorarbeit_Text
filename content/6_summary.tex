@@ -1,9 +1,20 @@
 \chapter{Summary}\label{ch:summary}
 
 This thesis contributed to various research areas.
-During the research \ac{BERT} was sucessfully trained on Form 10-K's and Form 10-Q's by companys listed in the \ac{SP} 500 index, which were loaded from the \ac{SRAF}.
-The resulting model beats the original BERT\textsubscript{BASE} model by 22.1\% in the masked language model task and by 34.1\% in the next sentence prediction and achieves similar results as FinBERT by \cite{DeSola2019}.
+During the research \ac{BERT} was sucessfully trained on Form 10-K's and Form 10-Q's by companys listed in the \ac{SP} 500 index between the 31/12/2003 and 31/12/2018.
+These were loaded from the \ac{SRAF} and labeled as \textit{positive} or \textit{negative} depending on the resulting market reaction.
+The trained \ac{BERT} model beats the original BERT\textsubscript{BASE} model by 22.1\% in the masked language model task and by 34.1\% in the next sentence prediction and achieves similar results to FinBERT by \cite{DeSola2019}.
 The thesis also showed how the \ac{BERT} sequence embeddings can be used to represent a whole document by averaging them per business report.
-This allowed to train multiple classifiers, including a Naive Bayes, a \ac{KNN} classifier and a \ac{SVM}, reaching classification accuracies of up to 69.3\%.
+This allowed to train multiple classifiers, including a Naive Bayes, a \ac{KNN} classifier and a \ac{SVM}, reaching a classification accuracy of 69.3\% in the case of the \ac{SVM}.
+Neither the \ac{BLSTM}, trained with the sequence embeddings as time steps, nor using the averages and standard deviations of the sequence embeddings for training the classifiers, brought an improvement to this accuracy.
 A test of the hypothesis that the classifiers learned to distinguish a good from a bad company was negative.
 Therefore it can be concluded that the models can classify the business reports and machine learning is indeed viable to predict short-term market reactions under the restrictions made in chapter \ref{ch:outlook}.
+
+% This thesis contributed to various research areas.
+% During the research \ac{BERT} was sucessfully trained on Form 10-K's and Form 10-Q's by companys listed in the \ac{SP} 500 index between the 31/12/2003 and 31/12/2018.
+% These were loaded from the \ac{SRAF} and labeled as \textit{positive} or \textit{negative} depending on the .
+% The resulting model beats the original BERT\textsubscript{BASE} model by 22.1\% in the masked language model task and by 34.1\% in the next sentence prediction and achieves similar results as FinBERT by \cite{DeSola2019}.
+% The thesis also showed how the \ac{BERT} sequence embeddings can be used to represent a whole document by averaging them per business report.
+% This allowed to train multiple classifiers, including a Naive Bayes, a \ac{KNN} classifier and a \ac{SVM}, reaching classification accuracies of up to 69.3\%.
+% A test of the hypothesis that the classifiers learned to distinguish a good from a bad company was negative.
+% Therefore it can be concluded that the models can classify the business reports and machine learning is indeed viable to predict short-term market reactions under the restrictions made in chapter \ref{ch:outlook}.

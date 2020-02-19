@@ -23,9 +23,11 @@ Yet, the text of an annual report contains information about future development,
 Therefore it should be used to the same extent for investment decisions.
 
 Since the reading and understanding of the reports is time consuming, the question arises whether this task can be supported or even completely accomplished by software.
-The approach to this problem is to regard it as a text classification problem, where the text of the business report is classified as either \textit{positive} or \textit{negative}.
-Recent developments in the field of natural language processing led to language models like \acs{BERT}, which achieves new levels of textual comprehension and even outperform humans in certain tasks \cite[p. 7]{Devlin2018}.
-However these models are technically limited to short texts, therefore this thesis also examines a way to use these models for texts in document length.
+This software can give the investor a hint whether the text of the report can be regarded as \textit{positive} or \textit{negative}.
+The software could for example count the number of positive and negative words and classify the report based on this measurement.
+This thesis, however, follows another approach and shows how a machine learning algorithm can be trained to predict whether a business report leads to a \textit{positive} or \textit{negative} market reaction.
+An important part of the research also covers the training of \acs{BERT}, a language model which achieves new levels of textual comprehension and even outperform humans in certain tasks \cite[p. 7]{Devlin2018}.
+However \acs{BERT} is technically limited to short texts, therefore this thesis also examines a way to use it for business reports, which are typically longer than what \acs{BERT} can process.
 The thesis is structured as follows:
 Chapter \ref{ch:data} describes the data, that was used for the research and how it was processed, chapter \ref{ch:method} describes how \acs{BERT} was applied to the long texts and which classifiers were used.
 Chapter \ref{ch:experiments} then presents the classification attempts that were made, chapter \ref{ch:outlook} and \ref{ch:summary} finally give an outlook and a summary of the research.
@@ -34,8 +36,8 @@ Chapter \ref{ch:experiments} then presents the classification attempts that were
 There are several studies about the impact of business reports on the stock price.
 \cite{Li2006} examines the implications of the sentiment in annual reports on the stock price.
 He measures the sentiment by counting the number of words that are related to risk or uncertainty \cite[p. 4]{Li2006}.
-His finding is that there is a negative relation between the change of risk sentiment and the stock returns with a regression approach as well as with a time-series portfolio approach \cite[p. 14]{Li2006}.
-With the portfolio approach he finds that the companies with the lowest increase of risk sentiment create an excess return of 1.52\% in a one month period \cite[p. 16]{Li2006}.
+His finding is that there is a negative relation between the change of risk sentiment and the stock returns by using a regression approach as well as a time-series portfolio approach \cite[p. 14]{Li2006}.
+With the portfolio approach he finds that a portfolio containing the companies with the lowest increase of risk sentiment creates an excess return of 1.52\% in a one month period \cite[p. 16]{Li2006}.
 
 \cite{Feldman2010} analyses the impact of tone changes in the management discussion and analysis (MD\&A) section of annual reports on the stock market \cite[p. 918]{Feldman2010}.
 This tone change is measured by calculating the difference of the number of positive (negative) words to the average of positive (negative) words of annual reports in the last 400 days \cite[p. 927]{Feldman2010}.
@@ -53,7 +55,7 @@ They find that the sentiment leads to a significant market reaction within three
 They use ratios, calculated from the financial information of the report, like earnings per share, book-value per share or net profit growth rate as features to train a \ac{SVM} \cite[p. 61]{Heo2016}.
 For that one month period they gain a prediction accuracy of up to 57.1\% \cite[p. 63]{Heo2016}.
 
-\cite{Milosevic2016} follows a long term approach as they try to predict whether the stock price increases by more than 10\% or not in a one year period \cite[pp. 4-5]{Milosevic2016}.
+\cite{Milosevic2016} follows a long term approach as they try to predict whether the stock price increases by more than 10\% in a one year period \cite[pp. 4-5]{Milosevic2016}.
 They run two experiments, one with 28 financial indicators and one with 11 indicators, like market capitalization, dividend yield, net revenue growth rate or price to earnings ratio \cite[pp. 3-4]{Milosevic2016}.
 They trained different classifiers including Decision Tree, \ac{SVM}, Random Forest, Logistic Regression and Naive Bayes \cite[p. 5]{Moukalled2019}.
 For the experiment with 28 indicators they achieve a F-score of 75.1\% in case of the Random Forest and for the experiment with 11 indicators they achieve a F-score of 76.5\% on the same classifier \cite[p. 7]{Milosevic2016}.
@@ -63,7 +65,8 @@ This prediction is done for the stocks of four companies, which are Apple, Googl
 The sentiments are determined by counting the number of positive and negative words in the news which leads to a division in neutral, positive and negative news \cite[p. 5]{Moukalled2019}.
 7 other features were computed with the historical stock prices:
 This includes the average of the stock price in the first trading hours and a trend indicator given by the slope of a linear model fitted to the stock price in this time frame \cite[p. 5]{Moukalled2019}.
-They trained a \ac{RNN}, a feed forward neural network, a \ac{SVM} and support vector regression, giving directional accuracies between 75\% to 83\% in the case of the \ac{SVM} \cite[p. 8]{Moukalled2019}.
+They trained a \ac{RNN}, a feed forward neural network, a \ac{SVM} and performed support vector regression
+Their experiments gave directional accuracies between 75\% to 83\% in the case of the \ac{SVM} \cite[p. 8]{Moukalled2019}.
 
 \textbf{Training of \acs{BERT} on annual reports} \\
 Similar to this thesis, \cite{DeSola2019} also pre-trained \acs{BERT} on annual reports.
@@ -71,5 +74,5 @@ They trained three models with different results:
 For FinBERT Prime, which they trained from scratch with business reports from 2017, 2018 and 2019, they gained a masked LM accuracy of 80.17\% and a next sentence accuracy of 98.5\% \cite[pp. 6-7]{DeSola2019}.
 The second trained model was FinBERT Pre2K, which they trained on business reports from 1998 and 1999 yielding a masked LM accuracy of 77.2\% and a next sentence accuracy of 91.88\% \cite[pp. 6-7]{DeSola2019}.
 Finally they also trained FinBERT Combo on top of the original BERT checkpoint, which gave a masked LM accuracy of 77.2\% and a next sentence accuracy of 90.63\% \cite[pp. 6-7]{DeSola2019}.
-Their Finding is, that the language of business report changed within the 20 years, because the accuracies of FinBERT Prime were significantly lower than the accuracies of FinBERT Pre2K \cite[pp. 7-8]{DeSola2019}.
+Since the accuracies were all determined on a test dataset with business reports from 2019 and the accuracies of FinBERT Pre2K were significantly lower than the accuracies of FinBERT Prime, they conclude that the language of business report changed within the 20 years \cite[pp. 7-8]{DeSola2019}.
 

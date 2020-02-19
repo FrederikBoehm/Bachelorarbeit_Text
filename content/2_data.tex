@@ -1,7 +1,7 @@
 \chapter{Data}\label{ch:data}
 
 The data that is required for the task of predicting market reactions after business report releases are the business reports, as well as the market reaction that could be observed from the release of the report.
-Therefore this chapter first describes the datasources of the business reports and the source of the stock prices which give the market reaction.
+Therefore this chapter first describes the datasources of the business reports and afterwards the source of the stock prices.
 The last section of the chapter describes necessary preprocessing steps on this data.
 
 \section{Business reports}
@@ -12,10 +12,10 @@ A conveniant data source for the business reports is the \ac{EDGAR}.
 % \ac{EDGAR} is the system of the \ac{SEC} on which all companies with business activity in the United States have to publish their business reports.
 \ac{EDGAR} is the system of the \ac{SEC} on which companies that apply to Section 12 in Securities Exchange Act of 1934\footnote{\url{https://legcounsel.house.gov/Comps/Securities Exchange Act Of 1934.pdf}} have to publish their business reports.
 These are all companies with business activities in the US, that have more than \$ 10 million of total assets and that have more than 2000 personal shareholders or 500 personal shareholders and at least one accredited investor holding a share.
-Business reports of companies that reached these requirements in the past, but do not reach them anymore, like insolvent or aquired companies, can still be retrieved though.
+Business reports of companies that reached these requirements in the past, but were dissolved because of insolvency or because the company was aquired by another company, can still be retrieved though.
 \ac{EDGAR} includes all types of filings, like Form 1-A, Form 1-Z, Form 8-K\footnote{A complete list of all filing types accepted by \ac{EDGAR} can be found at: \url{https://www.sec.gov/info/edgar/forms/edgform.pdf}}.
 For this research however only the annual reports (Form 10-K) and quarterly reports (Form 10-Q) were used.
-A Form 10-K has the following standardized structure: \footnote{\url{https://www.sec.gov/about/forms/form10-k.pdf}}
+A Form 10-K has the following standardised structure\footnote{\url{https://www.sec.gov/about/forms/form10-k.pdf}}:
 \begin{addmargin}[1em]{1em}
     \begin{description}
         \item \begin{center}PART I\end{center}
@@ -45,7 +45,7 @@ A Form 10-K has the following standardized structure: \footnote{\url{https://www
         \item Item 16. Form 10–K Summary.
     \end{description}
 \end{addmargin}
-The Form 10-Q is standardized as well, but it is less extensive as a Form 10-K.
+The Form 10-Q is standardised as well, but it is less extensive as a Form 10-K.
 For example, it does not require a description of the business model or declarations about the executive compensation.
 The Form 10-Q also does not require auditing of the financial statements.\footnote{\url{https://www.sec.gov/fast-answers/answersform10qhtm.html}}
 
@@ -111,9 +111,9 @@ Listing \ref{listing:10k_start} shows the beginning of a Form 10-K report as it 
 It can be seen, that this part of the file consists of the header data and generic text from the Form 10-K and can therefore be removed.
 The table of contents, which follows after the text in listing \ref{listing:10k_start}, can also be removed.
 This parsing however, was no trivial task:
-Even though the Form 10-K and Form 10-Q are highly standardized, there are differences in detail between reports.
+Even though the Form 10-K and Form 10-Q are standardised, there are differences in detail between reports.
 These range from different usage of capitalization, over different formats of numerations like "I-1", "Part I. Item 1." or "Items 1. and 2. Business and Properties", up to a different order of the items.
-That made it infeasible to create a regular expression, which reliably detects the table on contents and regulatory texts.
+That made it infeasible to create a regular expression, which reliably detects the table of contents and compliance texts, which both should not influence the stock price.
 Therefore another approach was taken: The reports were first splitted into sentences with the \texttt{\_splitReportToSentences} function, which is described by the structogram in figure \ref{figure:structogram_splitReportToSentences}.
 \begin{figure}[h]
     \centering
@@ -121,7 +121,7 @@ Therefore another approach was taken: The reports were first splitted into sente
     \caption{High-level structogram of the \texttt{\_splitReportToSentences} function.}
     \label{figure:structogram_splitReportToSentences}
 \end{figure}
-This function is called for every report and uses the \textit{sentencizer} from the Python package spaCy to split the report into sentences.
+This function is called for every report and uses the \texttt{Sentencizer} from the Python package spaCy to split the report into sentences.
 It was interesting how long some of the resulting sentences were.
 Bar chart \ref{figure:words_distribution} shows the distribution of different words per sentences.
 \begin{figure}[h]
@@ -133,23 +133,23 @@ Bar chart \ref{figure:words_distribution} shows the distribution of different wo
 It can be observed, that there is a huge number of sentences with less than 8 and some sentences with more than 95 words per sentence.
 What the diagram does not show is the distribution for sentences with more than 200 words.
 They account for 0.2\% of all sentences, with the longest sentence having 3905 words.
-Sentences with less than 8 words are mostly headlines like "Item 2." or "Financial Statements and Supplementary Data Note 12.", sentences with more than 95 words appeared to be mostly regulatory texts.
+Sentences with less than 8 words are mostly headlines like "Item 2." or "Financial Statements and Supplementary Data Note 12.", sentences with more than 95 words appeared to be mostly regulatory and compliance texts.
 Therefore these sentences were removed from the reports.
 Some examples of these long sequences are given in appendix \ref{app:removed_sequences}.
-Since the whole parsing process takes two seconds per report on average, the Python multiprocessing package was used to optimize the parsing for multiple \acs{CPU}s.
+Since the whole parsing process takes two seconds per report on average, the Python multiprocessing package was used to optimise the parsing for multiple \acs{CPU}s.
 Therefore the parsing of the 27561 reports took about four hours on an Amazon EC2 instance with four v\acs{CPU}'s and 61 GB of memory.
 After this parsing is finished the resulting files are added to an index file with the company's \ac{CIK}, stock ticker symbol, filing date, form type and the file path.
 
 The second step covers the labeling of the reports as \textit{positive} or \textit{negative}.
 For that another script runs through the index file again and retrieves the price information from the database using the script in listing \ref{py:get_prices}.
 \lstinputlisting[language=Python,caption={Extract from the script that labels the reports},captionpos=b, label={py:get_prices}]{listings/get_prices.py}
-The highest price change of stocks happens within two days after the release of a business report \cite{Feldman2010}, therefore the script retrieves three records from the database, which also includes the day of the report release itself.
+Since the aim of the research is to predict short-term market reactions, the script retrieves three records from the database, which includes the day of the report release and the two following days.
 The change ratio \textit{CR} on the date \textit{d} of a company with the ticker symbol \textit{t} is then computed as following:
 \begin{equation}
     CR_{d,t} = \frac{p_{close, d + 2, t} - p_{open, d, t}}{p_{open, d, t}}
 \end{equation}
 Whereby $p_{open, d, t}$ is the opening stock price on the day of the report release and $p_{close, d + 2, t}$ is the closing price two days after the report has been released.
-If the resulting change ratio is negative the report is labeled as \textit{negative} else it is labeled as \textit{positive}.
+If the resulting change ratio is negative the report is labeled as \textit{negative} else it is labeled as \textit{positive}:
 \begin{equation}
     CN(CR_{d,t}) = \begin{cases}
         positive & \text{for } CR_{d,t} \geq 0 \\
@@ -158,10 +158,10 @@ If the resulting change ratio is negative the report is labeled as \textit{negat
 \end{equation}
 The resulting \ac{CSV} file has 24609 entries and each of these entries references one parsed report file.
 
-Figure \ref{figure:data_flowchart} summarizes the steps described in this chapter.
-\begin{figure}[h]
-    \centering
-    \includegraphics[width=0.6\textwidth]{figures/Flowchart_Data.png}
-    \caption{The steps until the data is combined into one dataset.}
-    \label{figure:data_flowchart}
-\end{figure}
+% Figure \ref{figure:data_flowchart} summarizes the steps described in this chapter.
+% \begin{figure}[h]
+%     \centering
+%     \includegraphics[width=0.6\textwidth]{figures/Flowchart_Data.png}
+%     \caption{The steps until the data is combined into one dataset.}
+%     \label{figure:data_flowchart}
+% \end{figure}

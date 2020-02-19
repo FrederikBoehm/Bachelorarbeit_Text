@@ -10,7 +10,7 @@ With the batch size of 128, and 375 million words in the training dataset, this 
     \label{eq:epochs_pre_training}
     epochs = \frac{steps \cdot batch\_size \cdot seq\_length}{word\_count}
 \end{equation}
-The blue curves in figure \ref{figure:bert_pretraining_learning_mlm} show the learning progress for the described configuration, it reaches an masked LM accuracy of 77.3\% on the validation set after 185000 steps and an accuracy of 91.3\% for the next sentence prediction.
+The blue curves in figure \ref{figure:bert_pretraining_learning_mlm} show the learning progress for the described configuration, it reaches a masked LM accuracy of 77.3\% on the validation set after 185000 steps and an accuracy of 91.3\% for the next sentence prediction.
 \begin{figure}[h]
     \begin{subfigure}{0.5\textwidth}
         \includegraphics[width=\textwidth]{figures/charts/pretraining_learning.png}
@@ -28,7 +28,7 @@ The blue curves in figure \ref{figure:bert_pretraining_learning_mlm} show the le
 One attempt to improve this accuracy was to use a different warmup rate.
 \cite{Popel2018} find that the transformer architecture is sensitive to the number of warmup steps.
 A short warmup phase can therefore lead to \textit{diverged} training, where the learning curve drops almost to zero and does not recover \cite[p. 60]{Popel2018}.
-Even if that is not the same behavior as observed here, it is an indicator that the accuracy might be affected by the short warmup rate of 10\% of the total training steps.
+Even if that is not the same behaviour as observed here, it is an indicator that the accuracy might be affected by the short warmup rate of 10\% of the total training steps.
 However, the masked LM accuracy could not be improved with setting the warmup steps to 92500 as the orange curve shows (76.6\% on the validation dataset).
 Another idea was that the vocabulary of \ac{BERT} might not be appropriate to model the language of business reports.
 Since BERT was trained on Wikipedia articles, a lot of special finance or accounting terms are not covered by the vocabulary.
@@ -60,6 +60,7 @@ However, building a vocabulary based on the business reports has the drawback th
 Pre-training from scratch takes about two weeks on a Google Cloud TPU and even longer on a GPU\footnote{\url{https://github.com/google-research/bert\#pre-training-tips-and-caveats}}, which eliminates this option because of the limited time scope of the research.
 The developers of \ac{BERT} anticipated this situation and left 994 tokens unused which can be set to custom words.
 These were set to the words that occur more than 100000 times in the dataset, which are for example "liabilities", "amortization" or "depreciation".
+In total 166 of the unused tokens were manually replaced by custom words.
 As the green and the red curve in figure \ref{figure:bert_pretraining_learning_mlm} show, this even has a negative effect on the masked LM accuracy, because \ac{BERT} first has to learn the meaning of the words.
 Even though the accuracy then improves, it always stays below the accuracy of the original vocab, with the same warmup rate.
 The accuracy of the next sentence prediction showed no significant changes during these attempts as figure \ref{figure:bert_pretraining_learning_nsp} shows.
@@ -86,7 +87,7 @@ Figure \ref{figure:bert_pretraining_learning_512} shows the combined learning cu
 It can be seen, that the longer sequences improve both the masked LM accuracy and the next sentence prediction accuracy by a significant amount.
 The final masked LM accuracy on an independent test dataset was 79.1\% and for the next sentence prediction 92.2\% was reached.
 These results are really similar to the results of FinBERT which was also trained on Form 10-K filings \cite[p. 4]{DeSola2019}.
-They carried out a pre-training from scratch and gained a masked LM accuracy of 80.17\% and a next sentence prediction accuracy of 98.5\% \cite[p. 7]{DeSola2019}.
+They used different methods for training, including a pre-training from scratch which led to a masked LM accuracy of 80.17\% and a next sentence prediction accuracy of 98.5\% \cite[p. 7]{DeSola2019}.
 The model that was trained on top of the Google checkpoint achieved a masked LM accuracy of 77.2\% and a next sentence prediction accuracy of 90.63\% \cite[p. 7]{DeSola2019}.
 
 Pre-training was run on one NVIDIA GeForce RTX 2080 Ti and took about 19 hours for the training with sequence length 128 and about 2 hours for learning the positional embeddings, with a sequence length of 512 tokens.
@@ -134,29 +135,19 @@ The learning curve for the training of the classifier is presented in figure \re
 The test accuracy of the naive bayes model was 68.1\%, which is a significant improvement over the classification accuracy of single sequences during finetuning.
 This improvement can be explained due to the averaging of the feature vectors of each report.
 That removes random noise from the data which results from the text passages, which have no impact on the stock price.
-A view on the dimension reduced data shows that positive and negative datapoints for the single sequences (figure \ref{figure:pca_sequence}) overlap each other more than for the document embeddings (figure \ref{figure:pca_document}).
+A view on the dimension reduced data using \acl{PCA} shows that positive and negative datapoints for the single sequences (figure \ref{figure:pca_sequence}) overlap each other more than for the document embeddings (figure \ref{figure:pca_document}).
 \begin{figure}[h]
-    \begin{subfigure}{0.5\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{figures/pca_scatter_sequence_level.png}
-        \caption{Each point represents a sequence of a document.}
-        \label{figure:pca_sequence}
-    \end{subfigure}
-    \begin{subfigure}{0.5\textwidth}
-        \centering
-        \includegraphics[width=\textwidth]{figures/pca_scatter_document_level.png}
-        \caption{Each point represents one document after averaging the sequence embeddings.}
-        \label{figure:pca_document}
-    \end{subfigure}
+    \subcaptionbox{Each point represents a sequence of a document.\label{figure:pca_sequence}}[0.5\linewidth]{\includegraphics[width=0.5\textwidth]{figures/pca_scatter_sequence_level.png}}
+    \subcaptionbox{Each point represents one document after averaging the sequence embeddings.\label{figure:pca_document}}[0.5\linewidth]{\includegraphics[width=0.5\textwidth]{figures/pca_scatter_document_level.png}}
     \caption{Dimension reduced plots of the datapoints with \ac{PCA}.}
     \label{figure:pca}
 \end{figure}
 Figure \ref{figure:pca_sequence} shows all 1195631 sequence embeddings created by \ac{BERT} and figure \ref{figure:pca_document} shows the 24483 document embeddings, which are the averages of the sequence embeddings per document.
 
-\subsection{K-nearest neighbor classifier}
-As a second classifier the K-nearest neighbor classifier was tested.
+\subsection{\acl{KNN} classifier}
+As a second classifier the \acl{KNN} classifier was tested.
 Similar to the Naive Bayes classifier, the sequence embeddings were averaged per report.
-To determine the value of K, the validation curve in Figure \ref{figure:knn_validation} was created with 5-fold cross-validation, which shows the classification accuracy for uneven values of k in the range of 3 to 350.
+To determine the value of $k$, the validation curve in Figure \ref{figure:knn_validation} was created with 5-fold cross-validation, which shows the classification accuracy for uneven values of $k$ in the range of 3 to 350.
 \begin{figure}[h]
     \centering
     \includegraphics[width=0.5\textwidth]{figures/charts/knn_validation.png}
@@ -240,7 +231,7 @@ One possible way to improve the accuracy, is to take the order of the sequences 
 This will be done using a neural network with a LSTM architecture.
 Another approach is to give the previously tested classifiers more information about the structure of the report features, by not just passing the average of the hidden states to the classifier, but also their standard deviation.
 This standard deviation vector will be concatenated to the vector of the feature averages, so the input vector doubles in size from 768 to 1536.
-Both approaches again use 5 fold cross validation to get stable validation results.
+Both approaches again use 5-fold cross-validation to get stable validation results.
 
 \subsection{\acl{BLSTM}}
 From the tested models, the \ac{BLSTM} is the only model, which can learn the sequential structure of the business reports.
@@ -255,6 +246,7 @@ Instead they are fed into the \ac{BLSTM} as the different time steps of the repo
 \end{figure}
 A view on the lengths of the reports shows (Figure \ref{figure:timesteps_distribution}), that 99.8\% of the reports have a length of 300 or less sequences.
 Therefore, for the first architecture 300 \ac{BLSTM} units were used on the first layer for each direction of the \acl{BLSTM}.
+The whole model had the following architecture:
 
 Architecture 1:
 \begin{addmargin}[1em]{1em}
@@ -311,7 +303,7 @@ Architecture 4:
     \end{description}
 \end{addmargin}
 The 616 units on the first layer of Architecture 2 and 3 was chosen because, the maximum length of the reports were 616 sequences (figure \ref{figure:timesteps_distribution}).
-Since none of these architectures outperformes the other architectures significantly, the second architecture was used to obtain a final test accuracy of 68.3\%.
+Since none of these architectures outperformes the other architectures significantly, the second architecture was arbitrary chosen to obtain a final test accuracy of 68.3\%.
 Even though this is a worse result, than what the \ac{SVM} reached, there is still a takeaway from these experiments concerning the LSTM architecture, which is that the models with multiple LSTM layers seem to perform better than the models with a single LSTM layer.
 
 
@@ -391,6 +383,19 @@ The \ac{SVM} with $C=100000$ and $\gamma=1\cdot10^{-7}$ reached a test accuracy 
 \clearpage
 
 \section{Summary of the experiments}
+Table \ref{table:test_results_bert} shows the results from the \ac{BERT} training.
+The pre-training results were quite promising, however the classification accuracy during fine-tuning was slightly above random guessing because of the short sequence lengths.
+\begin{table}[h]
+    \centering
+    \begin{tabular}{ c | c | c }
+        \multirow{2}{*}{Pre-training} & Masked LM accuracy & 79.1\% \\
+        & Next sentence accuracy & 92.2\% \\ \hline
+        Fine-tuning & Classification accuracy & 55.4\%
+    \end{tabular}
+    \caption{Test accuracies of the \ac{BERT} training.}
+    \label{table:test_results_bert}
+\end{table}
+
 Table \ref{table:test_results} summarizes the test results of the classifiers.
 As it can be seen all classifiers performed approximatly similar, however the \ac{SVM} clearly achieved the best accuracy at 69.3\% with the hyperparameters $C=100$ and $\gamma=0.0001$.
 \begin{table}[h]
